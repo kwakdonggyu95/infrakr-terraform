@@ -50,11 +50,23 @@ resource "aws_instance" "ap_0" {
     encrypted   = true     # 암호화 활성화 (보안 강화)
   }
 
-  tags = merge(var.tags, {
-    Name = "infrakr-test-ap-0"  # 인스턴스 이름
-    Service = "test"             # 서비스 구분
-    Env     = "production"       # 환경 구분 (production)
-  })
+  # 인스턴스 태그 (5개만 유지)
+  tags = {
+    Name            = "infrakr-test-ap-0"
+    Service         = var.tags["Service"]
+    Project         = var.tags["Project"]
+    ChorusCost_Tag1 = var.tags["ChorusCost_Tag1"]
+    ManagedBy       = var.tags["ManagedBy"]
+  }
+  
+  # 볼륨 태그 (인스턴스에 연결된 모든 EBS 볼륨에 자동 적용, 5개만 유지)
+  volume_tags = {
+    Name            = "infrakr-test-ap-0"
+    Service         = var.tags["Service"]
+    Project         = var.tags["Project"]
+    ChorusCost_Tag1 = var.tags["ChorusCost_Tag1"]
+    ManagedBy       = var.tags["ManagedBy"]
+  }
 }
 
 # ============================================================================
@@ -79,11 +91,23 @@ resource "aws_instance" "ap_1" {
     encrypted   = true
   }
 
-  tags = merge(var.tags, {
-    Name    = "infrakr-test-ap-1"
-    Service = "test"
-    Env     = "production"       # 환경 구분 (production)
-  })
+  # 인스턴스 태그 (5개만 유지)
+  tags = {
+    Name            = "infrakr-test-ap-1"
+    Service         = var.tags["Service"]
+    Project         = var.tags["Project"]
+    ChorusCost_Tag1 = var.tags["ChorusCost_Tag1"]
+    ManagedBy       = var.tags["ManagedBy"]
+  }
+  
+  # 볼륨 태그 (인스턴스에 연결된 모든 EBS 볼륨에 자동 적용, 5개만 유지)
+  volume_tags = {
+    Name            = "infrakr-test-ap-1"
+    Service         = var.tags["Service"]
+    Project         = var.tags["Project"]
+    ChorusCost_Tag1 = var.tags["ChorusCost_Tag1"]
+    ManagedBy       = var.tags["ManagedBy"]
+  }
 }
 
 # ============================================================================
@@ -108,11 +132,23 @@ resource "aws_instance" "alpha_0" {
     encrypted   = true
   }
 
-  tags = merge(var.tags, {
-    Name    = "infrakr-test-alpha-0"
-    Service = "test"
-    Env     = "alpha"
-  })
+  # 인스턴스 태그 (5개만 유지)
+  tags = {
+    Name            = "infrakr-test-alpha-0"
+    Service         = var.tags["Service"]
+    Project         = var.tags["Project"]
+    ChorusCost_Tag1 = var.tags["ChorusCost_Tag1"]
+    ManagedBy       = var.tags["ManagedBy"]
+  }
+  
+  # 볼륨 태그 (인스턴스에 연결된 모든 EBS 볼륨에 자동 적용, 5개만 유지)
+  volume_tags = {
+    Name            = "infrakr-test-alpha-0"
+    Service         = var.tags["Service"]
+    Project         = var.tags["Project"]
+    ChorusCost_Tag1 = var.tags["ChorusCost_Tag1"]
+    ManagedBy       = var.tags["ManagedBy"]
+  }
 }
 
 # ============================================================================
@@ -137,9 +173,21 @@ resource "aws_instance" "alpha_1" {
     encrypted   = true
   }
 
-  tags = merge(var.tags, {
-    Name    = "infrakr-test-alpha-1"
-    Service = "test"
-    Env     = "alpha"
-  })
+  # 인스턴스 태그 (5개만 유지)
+  tags = {
+    Name            = "infrakr-test-alpha-1"
+    Service         = var.tags["Service"]
+    Project         = var.tags["Project"]
+    ChorusCost_Tag1 = var.tags["ChorusCost_Tag1"]
+    ManagedBy       = var.tags["ManagedBy"]
+  }
+  
+  # 볼륨 태그 (인스턴스에 연결된 모든 EBS 볼륨에 자동 적용, 5개만 유지)
+  volume_tags = {
+    Name            = "infrakr-test-alpha-1"
+    Service         = var.tags["Service"]
+    Project         = var.tags["Project"]
+    ChorusCost_Tag1 = var.tags["ChorusCost_Tag1"]
+    ManagedBy       = var.tags["ManagedBy"]
+  }
 }

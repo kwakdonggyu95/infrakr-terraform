@@ -138,28 +138,28 @@ VPC (10.160.0.0/16) - InfraKR 계정에서 생성
 - ✅ **infrakr-test-ap-0**
   - 인스턴스 타입: t3.micro (2 vCPU, 1GB RAM)
   - 서브넷: Private Subnet (us-west-2a)
-  - 볼륨: GP3, 20GB, 암호화
+  - 볼륨: GP3, 30GB, 암호화
   - 보안 그룹: LinuxDefault
   - IAM Role: infrakr-test-production-ec2-role
   - 태그: Service=test, Env=alpha
 - ✅ **infrakr-test-ap-1**
   - 인스턴스 타입: t3.micro (2 vCPU, 1GB RAM)
   - 서브넷: Private Subnet (us-west-2c)
-  - 볼륨: GP3, 20GB, 암호화
+  - 볼륨: GP3, 30GB, 암호화
   - 보안 그룹: LinuxDefault
   - IAM Role: infrakr-test-production-ec2-role
   - 태그: Service=test, Env=alpha
 - ✅ **infrakr-test-alpha-0**
   - 인스턴스 타입: t3.micro (2 vCPU, 1GB RAM)
   - 서브넷: Private Subnet (us-west-2a)
-  - 볼륨: GP3, 20GB, 암호화
+  - 볼륨: GP3, 30GB, 암호화
   - 보안 그룹: LinuxDefault
   - IAM Role: infrakr-test-alpha-ec2-role
   - 태그: Service=test, Env=alpha
 - ✅ **infrakr-test-alpha-1**
   - 인스턴스 타입: t3.micro (2 vCPU, 1GB RAM)
   - 서브넷: Private Subnet (us-west-2c)
-  - 볼륨: GP3, 20GB, 암호화
+  - 볼륨: GP3, 30GB, 암호화
   - 보안 그룹: LinuxDefault
   - IAM Role: infrakr-test-alpha-ec2-role
   - 태그: Service=test, Env=alpha
@@ -418,7 +418,7 @@ Terraform이 자동으로 의존성을 해결하지만, 개념적 순서는 다�
 ### 7.1 비용 관련
 - **EC2 인스턴스**: t3.micro (4개) - 시간당 과금
 - **ALB**: 시간당 과금 + 데이터 전송 비용 (2개 ALB)
-- **EBS 볼륨**: GP3 볼륨 4개 (20GB x 4)
+- **EBS 볼륨**: GP3 볼륨 4개 (30GB x 4)
 - **NAT Gateway**: 시간당 과금 (2개, 약 $0.045/시간 × 2 = $0.09/시간)
 - **Elastic IP**: NAT Gateway와 연결되어 있으면 비용 발생 안 함
 - **VPN Gateway**: 시간당 과금 (약 $0.05/시간)

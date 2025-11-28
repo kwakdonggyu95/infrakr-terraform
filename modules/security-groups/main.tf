@@ -8,21 +8,11 @@
 # Linux Default Security Group
 # ============================================================================
 # 기본 Linux 서버용 보안 그룹
-# SSH 접속, VPC 내부 통신, 다양한 서비스 포트 허용
+# SSH 접속, 다양한 서비스 포트 허용 (필요한 포트만 개별 허용)
 resource "aws_security_group" "linux_default" {
   name        = "LinuxDefault"
   description = "LinuxDefault security group"
   vpc_id      = var.vpc_id  # 이 보안 그룹이 속할 VPC
-
-  # 인바운드 규칙: VPC 내부에서 모든 트래픽 허용
-  # VPC 내부 리소스 간 통신을 위해 필요
-  ingress {
-    description = "All traffic from VPC"
-    from_port   = 0          # 모든 포트
-    to_port     = 0          # 모든 포트
-    protocol    = "-1"       # 모든 프로토콜
-    cidr_blocks = ["10.160.0.0/16"]  # VPC CIDR 블록
-  }
 
   # 인바운드 규칙: 전체 트래픽 허용 (특정 사무실 및 AWS VPC)
   # Tokyo/Seoul 사무실, AWS VPC, VPN, Gnosis EKS 등에서의 접근 허용
