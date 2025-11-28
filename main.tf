@@ -233,3 +233,47 @@ module "cloudfront" {
   
   tags = var.common_tags  # 공통 태그 적용
 }
+
+# ============================================================================
+# VPN Module (Site-to-Site VPN 연결)
+# ============================================================================
+# 사무실 네트워크(10.15.0.0/16)와 VPC를 연결하는 Site-to-Site VPN 구성
+# Customer Gateway, VPN Gateway, VPN Connection 생성
+module "vpn" {
+  source = "./modules/vpn"  # VPN 모듈 경로
+  
+  # VPC 설정
+  vpc_id = module.vpc.vpc_id  # VPC ID
+  
+  # Customer Gateway 설정
+  customer_gateway_ip_address = var.customer_gateway_ip_address  # Fortigate 공인 IP 주소
+  customer_gateway_bgp_asn    = var.customer_gateway_bgp_asn    # BGP ASN (정적 라우팅 사용 시 선택사항)
+  customer_gateway_name       = var.customer_gateway_name       # Customer Gateway 이름
+  
+  # VPN Gateway 설정
+  vpn_gateway_name = var.vpn_gateway_name  # VPN Gateway 이름
+  
+  # VPN Connection 설정
+  vpn_connection_name = var.vpn_connection_name  # VPN Connection 이름
+  static_routes_only   = var.vpn_static_routes_only  # 정적 라우팅 사용 여부
+  remote_network_cidr  = var.vpn_remote_network_cidr  # 원격 네트워크 CIDR (10.15.0.0/16)
+  
+  tags = var.common_tags  # 공통 태그 적용
+}
+
+# ============================================================================
+# Routing Module (라우팅 모듈)
+# ============================================================================
+# VPN Gateway 등 추가 라우팅을 한 곳에서 통합 관리
+# 모든 라우팅 테이블 설정을 이 모듈에서 확인할 수 있습니다.
+module "routing" {
+  source = "./modules/routing"  # 라우팅 모듈 경로
+  
+  # Route Table IDs
+  public_route_table_id  = module.vpc.public_route_table_id
+  private_route_table_ids = module.vpc.private_route_table_ids
+  
+  # VPN Gateway 라우팅
+  vpn_gateway_id         = module.vpn.vpn_gateway_id
+  vpn_remote_network_cidr = var.vpn_remote_network_cidr  # 10.15.0.0/16
+}

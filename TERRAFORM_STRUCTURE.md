@@ -16,6 +16,14 @@ infrakr/
     ├── ec2/
     │   ├── main.tf            # EC2 모듈의 main.tf
     │   └── variables.tf       # EC2 모듈의 variables.tf
+    ├── vpn/
+    │   ├── main.tf            # VPN 모듈의 main.tf
+    │   ├── variables.tf       # VPN 모듈의 variables.tf
+    │   └── outputs.tf         # VPN 모듈의 outputs.tf
+    ├── routing/
+    │   ├── main.tf            # 라우팅 모듈의 main.tf
+    │   ├── variables.tf       # 라우팅 모듈의 variables.tf
+    │   └── outputs.tf         # 라우팅 모듈의 outputs.tf
     └── ...
 ```
 
@@ -56,6 +64,30 @@ module "vpc" {
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
   tags                 = var.common_tags
+}
+
+# VPN 모듈 호출 (VPC 모듈의 출력값 사용)
+module "vpn" {
+  source = "./modules/vpn"
+  
+  vpc_id                      = module.vpc.vpc_id  # VPC 모듈의 출력값 참조
+  customer_gateway_ip_address = var.customer_gateway_ip_address
+  customer_gateway_name      = var.customer_gateway_name
+  vpn_gateway_name           = var.vpn_gateway_name
+  vpn_connection_name         = var.vpn_connection_name
+  static_routes_only         = var.vpn_static_routes_only
+  remote_network_cidr        = var.vpn_remote_network_cidr
+  tags                       = var.common_tags
+}
+
+# Routing 모듈 호출 (VPC와 VPN 모듈의 출력값 사용)
+module "routing" {
+  source = "./modules/routing"
+  
+  public_route_table_id   = module.vpc.public_route_table_id
+  private_route_table_ids = module.vpc.private_route_table_ids
+  vpn_gateway_id         = module.vpn.vpn_gateway_id  # VPN 모듈의 출력값 참조
+  vpn_remote_network_cidr = var.vpn_remote_network_cidr
 }
 
 # EC2 모듈 호출 (VPC 모듈의 출력값 사용)
@@ -239,6 +271,8 @@ terraform.tfvars (루트)
 **루트 main.tf (간결함)**:
 ```hcl
 module "vpc" { ... }
+module "vpn" { ... }
+module "routing" { ... }
 module "ec2" { ... }
 module "alb" { ... }
 ```
@@ -250,6 +284,32 @@ resource "aws_subnet" "public" { ... }
 resource "aws_subnet" "private" { ... }
 # ... 수십 개의 리소스
 ```
+
+---
+
+## 🎯 모듈별 역할
+
+### VPC 모듈
+- VPC, 서브넷, Internet Gateway, NAT Gateway 생성
+- Route Tables 생성 (라우트는 별도 `aws_route` 리소스로 관리)
+- 기본 라우트 생성 (0.0.0.0/0 → IGW/NAT Gateway)
+
+### VPN 모듈
+- Customer Gateway 생성 (사무실 네트워크 등록)
+- VPN Gateway 생성 및 VPC 연결
+- VPN Connection 생성 (Site-to-Site VPN)
+- VPN Connection Route 생성 (원격 네트워크 CIDR 등록)
+
+### Routing 모듈
+- VPN Gateway 라우팅 추가 (모든 Route Table에 10.15.0.0/16 → VPN Gateway)
+- 향후 VPC Peering, Transit Gateway 등 추가 라우팅도 여기서 관리
+
+### EC2 모듈
+- EC2 인스턴스 생성
+- EBS 볼륨 생성 및 연결
+
+### 기타 모듈
+- Security Groups, IAM, ALB, S3, CloudFront 등
 
 ---
 

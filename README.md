@@ -25,6 +25,14 @@
 - **Internet Gateway**: VPC와 인터넷 연결
 - **NAT Gateways**: 2개 (각 Public Subnet에 1개씩)
 - **Route Tables**: Public 1개, Private 2개
+  - 기본 라우트: 0.0.0.0/0 → IGW (Public), 0.0.0.0/0 → NAT Gateway (Private)
+  - VPN 라우트: 10.15.0.0/16 → VPN Gateway (모든 Route Table)
+
+### VPN 연결
+- **Customer Gateway**: 사무실 네트워크(Fortigate) 연결
+- **VPN Gateway**: VPC에 연결된 가상 프라이빗 게이트웨이
+- **Site-to-Site VPN Connection**: 사무실 네트워크(10.15.0.0/16)와 VPC 연결
+- **라우팅**: 모든 Route Table에 10.15.0.0/16 → VPN Gateway 라우트 추가
 
 ### 컴퓨팅
 - **EC2 인스턴스**: 4개
@@ -90,7 +98,9 @@ Elastic IPs 할당 (NAT Gateway용, 2개)
   ↓
 NAT Gateways 생성 (Public Subnets에 배치, 2개)
   ↓
-Route Tables 생성 및 라우팅 규칙 설정
+Route Tables 생성
+  ↓
+기본 라우트 생성 (0.0.0.0/0 → IGW/NAT Gateway)
   ↓
 Route Table Associations (서브넷과 라우팅 테이블 연결)
 ```
@@ -139,7 +149,20 @@ ALB Listeners 생성
   - HTTPS Listener (포트 443, 다중 인증서)
 ```
 
-### 6단계: 스토리지 및 CDN
+### 6단계: VPN 연결
+```
+Customer Gateway 생성 (사무실 IP 등록)
+  ↓
+VPN Gateway 생성 및 VPC 연결
+  ↓
+VPN Connection 생성 (Site-to-Site VPN)
+  ↓
+VPN Connection Route 생성 (10.15.0.0/16)
+  ↓
+라우팅 테이블에 VPN 라우트 추가 (모든 Route Table)
+```
+
+### 7단계: 스토리지 및 CDN
 ```
 S3 Bucket 생성
   ↓
@@ -163,6 +186,14 @@ S3 Bucket Policy 업데이트 (CloudFront ARN 사용)
 - ✅ NAT Gateways: 2개
 - ✅ Route Tables: 3개 (Public 1개, Private 2개)
 - ✅ Route Table Associations: 4개
+- ✅ 기본 라우트: 3개 (0.0.0.0/0 → IGW/NAT Gateway)
+
+### VPN 리소스 (총 4개)
+- ✅ Customer Gateway: 1개
+- ✅ VPN Gateway: 1개
+- ✅ VPN Connection: 1개
+- ✅ VPN Connection Route: 1개 (10.15.0.0/16)
+- ✅ VPN 라우트: 3개 (모든 Route Table에 10.15.0.0/16 → VPN Gateway)
 
 ### 보안 리소스 (총 2개)
 - ✅ Security Groups: 2개
@@ -200,7 +231,7 @@ S3 Bucket Policy 업데이트 (CloudFront ARN 사용)
 ### IAM 정책 (추가)
 - ✅ IAM Policies: 2개 (각 Role당 S3 접근 정책 1개)
 
-**총 예상 리소스 수: 약 40개**
+**총 예상 리소스 수: 약 47개**
 
 ---
 
@@ -408,6 +439,8 @@ ChorusCost_Tag1 = "infra-kr"
 - ✅ **S3 버킷**: 정적 콘텐츠 저장소 추가
 - ✅ **CloudFront**: CDN 배포 추가 (S3와 연동)
 - ✅ **IAM Role**: S3 접근 권한 추가
+- ✅ **VPN 연결**: Site-to-Site VPN 추가 (사무실 네트워크 10.15.0.0/16)
+- ✅ **라우팅 모듈**: VPN 라우팅을 별도 모듈로 관리
 
 ---
 
@@ -437,6 +470,12 @@ ChorusCost_Tag1 = "infra-kr"
 - S3 버킷 정책이 CloudFront OAC를 허용하는지 확인
 - CloudFront Distribution이 활성화되어 있는지 확인
 
+### VPN 연결 오류
+- Customer Gateway IP 주소가 올바른지 확인
+- VPN Gateway가 VPC에 올바르게 연결되었는지 확인
+- 라우팅 테이블에 10.15.0.0/16 → VPN Gateway 라우트가 추가되었는지 확인
+- Fortigate에서 VPN 터널 설정이 완료되었는지 확인
+
 ---
 
 ## 참고 자료
@@ -447,3 +486,5 @@ ChorusCost_Tag1 = "infra-kr"
 - [S3 업로드 가이드](S3_UPLOAD_GUIDE.md) - EC2에서 S3로 이미지 업로드 방법
 - [AWS CloudFront 문서](https://docs.aws.amazon.com/cloudfront/)
 - [AWS S3 문서](https://docs.aws.amazon.com/s3/)
+- [AWS Site-to-Site VPN 문서](https://docs.aws.amazon.com/vpn/latest/s2svpn/)
+- [AWS VPN Gateway 문서](https://docs.aws.amazon.com/vpc/latest/userguide/vpn-gateway.html)

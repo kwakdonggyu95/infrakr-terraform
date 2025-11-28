@@ -96,24 +96,19 @@ resource "aws_nat_gateway" "main" {
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
-  }
-
-  # VPN Gateway 라우트 (선택사항) - 주석 처리됨
-  # Site-to-Site VPN 연결 시 사무실 네트워크(10.15.0.0/16)로의 라우팅
-  # dynamic "route" {
-  #   for_each = var.vpn_gateway_id != "" ? [1] : []
-  #   content {
-  #     cidr_block         = "10.15.0.0/16"
-  #     gateway_id         = var.vpn_gateway_id
-  #   }
-  # }
+  # 기본 라우트는 별도 aws_route 리소스로 관리 (routing 모듈에서)
+  # route 블록을 제거하여 aws_route 리소스와의 충돌 방지
 
   tags = merge(var.tags, {
     Name = "${var.name_prefix}-public-rt"
   })
+}
+
+# Public Route Table 기본 라우트 (0.0.0.0/0 → Internet Gateway)
+resource "aws_route" "public_default" {
+  route_table_id         = aws_route_table.public.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.main.id
 }
 
 # ============================================================================
@@ -124,24 +119,21 @@ resource "aws_route_table" "private" {
 
   vpc_id = aws_vpc.main.id
 
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main[count.index].id
-  }
-
-  # VPN Gateway 라우트 (선택사항) - 주석 처리됨
-  # Site-to-Site VPN 연결 시 사무실 네트워크(10.15.0.0/16)로의 라우팅
-  # dynamic "route" {
-  #   for_each = var.vpn_gateway_id != "" ? [1] : []
-  #   content {
-  #     cidr_block         = "10.15.0.0/16"
-  #     gateway_id         = var.vpn_gateway_id
-  #   }
-  # }
+  # 기본 라우트는 별도 aws_route 리소스로 관리
+  # route 블록을 제거하여 aws_route 리소스와의 충돌 방지
 
   tags = merge(var.tags, {
     Name = "${var.name_prefix}-private-rt-${substr(var.availability_zones[count.index], -1, 1)}"
   })
+}
+
+# Private Route Tables 기본 라우트 (0.0.0.0/0 → NAT Gateway)
+resource "aws_route" "private_default" {
+  count = length(var.private_subnet_cidrs)
+
+  route_table_id         = aws_route_table.private[count.index].id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.main[count.index].id
 }
 
 # ============================================================================

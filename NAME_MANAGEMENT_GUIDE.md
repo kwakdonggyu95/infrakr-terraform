@@ -88,6 +88,11 @@ name_prefix = "infrakr-prod"
 - Production Role: `infrakr-test-production-ec2-role`
 - Alpha Role: `infrakr-test-alpha-ec2-role`
 
+### VPN 리소스
+- Customer Gateway: `InfraKR-cgw-nonhyun` (또는 terraform.tfvars에서 오버라이드)
+- VPN Gateway: `InfraKR-vgw-oregon` (또는 terraform.tfvars에서 오버라이드)
+- VPN Connection: `InfraKR-vpn-nonhyun` (또는 terraform.tfvars에서 오버라이드)
+
 ### S3 & CloudFront
 - S3 Bucket: `infrakr-test-s3` (또는 terraform.tfvars에서 오버라이드)
 - CloudFront Distribution: `infrakr-test-cdn` (또는 terraform.tfvars에서 오버라이드)

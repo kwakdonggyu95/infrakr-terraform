@@ -36,6 +36,13 @@ VPC (10.160.0.0/16) - InfraKR 계정에서 생성
 - **S3 버킷**: 정적 콘텐츠 저장 (이미지 파일 등)
 - **CloudFront**: S3 버킷의 콘텐츠를 전 세계에 배포하는 CDN
 
+### 네트워크 연결
+- **VPN 연결**: 사무실 네트워크(10.15.0.0/16)와 VPC 연결
+  - Customer Gateway: Fortigate 공인 IP 등록
+  - VPN Gateway: VPC에 연결
+  - Site-to-Site VPN Connection: 양쪽 게이트웨이 연결
+  - 라우팅: 모든 Route Table에 10.15.0.0/16 → VPN Gateway 라우트 추가
+
 ---
 
 ## 3. 프로비저닝할 리소스 목록
@@ -64,6 +71,9 @@ VPC (10.160.0.0/16) - InfraKR 계정에서 생성
 - ✅ **Route Table Associations**
   - Public Subnets → Public Route Table
   - Private Subnets → Private Route Tables
+- ✅ **기본 라우트** (aws_route 리소스)
+  - Public Route Table: 0.0.0.0/0 → Internet Gateway
+  - Private Route Tables: 0.0.0.0/0 → NAT Gateway (각각)
 
 ### 3.2 보안 그룹 (생성)
 - ✅ **LinuxDefault**: 기본 Linux 서버용
@@ -178,7 +188,22 @@ VPC (10.160.0.0/16) - InfraKR 계정에서 생성
   - 타겟: infrakr-test-alpha-0, infrakr-test-alpha-1 (웹 서버 인스턴스)
 - ✅ **ALB Listener**: HTTP (포트 80), HTTPS (포트 443, *.cocone.co.kr, *.cocone-m.com 인증서 사용)
 
-### 3.6 S3 및 CloudFront (생성)
+### 3.6 VPN 연결 (생성)
+- ✅ **Customer Gateway**
+  - Fortigate 공인 IP 주소 등록
+  - BGP ASN 설정 (정적 라우팅 사용 시 선택사항)
+- ✅ **VPN Gateway**
+  - VPC에 연결된 가상 프라이빗 게이트웨이
+  - VPC 생성 후 자동 연결
+- ✅ **VPN Connection**
+  - Customer Gateway와 VPN Gateway 간 Site-to-Site VPN 연결
+  - 정적 라우팅 사용 (static_routes_only = true)
+- ✅ **VPN Connection Route**
+  - 원격 네트워크 CIDR 등록 (10.15.0.0/16)
+- ✅ **라우팅 테이블 라우트**
+  - 모든 Route Table에 10.15.0.0/16 → VPN Gateway 라우트 추가
+
+### 3.7 S3 및 CloudFront (생성)
 - ✅ **S3 Bucket**: `infrakr-test-s3` (또는 지정된 이름)
   - 버전 관리: 비활성화
   - 퍼블릭 접근 차단: 활성화 (CloudFront OAC를 통해서만 접근)
@@ -357,6 +382,7 @@ Terraform이 자동으로 의존성을 해결하지만, 개념적 순서는 다�
 
 1. **VPC 및 네트워크 리소스 생성**
    - VPC, Internet Gateway, 서브넷, Elastic IP, NAT Gateway, Route Tables 생성
+   - 기본 라우트 생성 (0.0.0.0/0 → IGW/NAT Gateway)
 
 2. **보안 그룹 생성**
    - VPC ID 필요
@@ -378,7 +404,11 @@ Terraform이 자동으로 의존성을 해결하지만, 개념적 순서는 다�
    - S3 버킷 정보 필요 (Origin 설정)
    - us-east-1 리전의 ACM 인증서 필요
 
-8. **S3 버킷 정책 업데이트**
+8. **VPN 연결 생성**
+   - Customer Gateway, VPN Gateway, VPN Connection 생성
+   - 라우팅 테이블에 VPN 라우트 추가
+
+9. **S3 버킷 정책 업데이트**
    - CloudFront Distribution ARN 필요 (순환 참조 해결)
 
 ---
@@ -391,6 +421,7 @@ Terraform이 자동으로 의존성을 해결하지만, 개념적 순서는 다�
 - **EBS 볼륨**: GP3 볼륨 4개 (20GB x 4)
 - **NAT Gateway**: 시간당 과금 (2개, 약 $0.045/시간 × 2 = $0.09/시간)
 - **Elastic IP**: NAT Gateway와 연결되어 있으면 비용 발생 안 함
+- **VPN Gateway**: 시간당 과금 (약 $0.05/시간)
 - **S3 버킷**: 스토리지 비용 (GB당) + 요청 비용 (PUT, GET 등)
 - **CloudFront**: 데이터 전송 비용 (GB당) + 요청 비용 (HTTP/HTTPS 요청당)
 
@@ -438,6 +469,13 @@ Terraform이 자동으로 의존성을 해결하지만, 개념적 순서는 다�
 ### 8.5 S3 버킷 정책 오류
 - CloudFront Distribution ARN이 올바른지 확인
 - 순환 참조 문제는 Terraform이 자동으로 해결하지만, 생성 순서 확인 필요
+
+### 8.6 VPN 연결 오류
+- Customer Gateway IP 주소가 올바른지 확인
+- VPN Gateway가 VPC에 올바르게 연결되었는지 확인
+- 라우팅 테이블에 VPN 라우트가 추가되었는지 확인
+- Fortigate에서 VPN 터널 설정이 완료되었는지 확인
+- VPN Connection 터널 정보 확인 (Terraform outputs 사용)
 
 ---
 
@@ -487,12 +525,17 @@ EC2 인스턴스에서 S3 버킷으로 이미지 파일을 업로드하는 방�
 - [ ] ALB용 ACM 인증서 생성 (us-west-2 리전)
 - [ ] CloudFront용 ACM 인증서 생성 (us-east-1 리전, 중요!)
 - [ ] Route53 레코드 설정 (커스텀 도메인용)
+- [ ] VPN 설정 정보 확인 (Customer Gateway IP 주소)
 
 프로비저닝 후 확인사항:
 - [ ] 모든 리소스 정상 생성 확인
 - [ ] EC2 인스턴스 접속 테스트
 - [ ] ALB 헬스 체크 정상 동작 확인
 - [ ] SSM 접속 테스트
+- [ ] VPN 연결 상태 확인 (VPN Connection이 available 상태인지)
+- [ ] VPN 터널 정보 확인 (Terraform outputs)
+- [ ] Fortigate에서 VPN 터널 설정 완료
+- [ ] 사무실 네트워크(10.15.0.0/16)와 통신 테스트
 - [ ] S3 버킷 접근 테스트 (EC2에서)
 - [ ] CloudFront 배포 상태 확인
 - [ ] CloudFront URL로 이미지 접근 테스트

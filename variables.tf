@@ -95,11 +95,111 @@ variable "common_tags" {
   }
 }
 
-# VPN Gateway ID (선택사항) - 주석 처리됨
-# Site-to-Site VPN 연결 시 사용할 VPN Gateway ID
-# 이 값이 설정되면 모든 Route Table에 10.15.0.0/16 -> VPN Gateway 라우트가 자동으로 추가됩니다
-# variable "vpn_gateway_id" {
-#   description = "VPN Gateway ID for Site-to-Site VPN connection (optional)"
+# ============================================================================
+# VPN Variables (Site-to-Site VPN 연결)
+# ============================================================================
+
+# Customer Gateway IP 주소
+# 온프레미스 네트워크(Fortigate)의 공인 IP 주소
+variable "customer_gateway_ip_address" {
+  description = "Public IP address of the Customer Gateway (Fortigate)"
+  type        = string
+  default     = ""
+}
+
+# Customer Gateway BGP ASN
+# Customer Gateway의 BGP 자율 시스템 번호 (정적 라우팅 사용 시 선택사항)
+variable "customer_gateway_bgp_asn" {
+  description = "BGP ASN for the Customer Gateway"
+  type        = number
+  default     = 65000
+}
+
+# Customer Gateway 이름
+variable "customer_gateway_name" {
+  description = "Name of the Customer Gateway"
+  type        = string
+  default     = ""
+}
+
+# VPN Gateway 이름
+variable "vpn_gateway_name" {
+  description = "Name of the VPN Gateway"
+  type        = string
+  default     = ""
+}
+
+# VPN Connection 이름
+variable "vpn_connection_name" {
+  description = "Name of the VPN Connection"
+  type        = string
+  default     = ""
+}
+
+# VPN 정적 라우팅 사용 여부
+variable "vpn_static_routes_only" {
+  description = "Whether to use static routes only for VPN (true) or dynamic routing (false)"
+  type        = bool
+  default     = true
+}
+
+# VPN 원격 네트워크 CIDR
+# 사무실 네트워크의 CIDR 블록 (예: 10.15.0.0/16)
+variable "vpn_remote_network_cidr" {
+  description = "Remote network CIDR block for VPN static routing (e.g., 10.15.0.0/16)"
+  type        = string
+  default     = ""
+}
+
+# ============================================================================
+# VPC Peering Variables (크로스 리전/크로스 계정 VPC Peering) - 제거됨
+# ============================================================================
+# 초기 구성에서는 VPC Peering을 제외합니다.
+# 필요시 나중에 주석을 해제하여 사용할 수 있습니다.
+
+# # Peer VPC ID
+# # 베이스 계정의 VPC ID
+# variable "peer_vpc_id" {
+#   description = "ID of the peer VPC (base account)"
+#   type        = string
+#   default     = ""
+# }
+
+# # Peer Region
+# # 베이스 계정 VPC의 리전
+# variable "peer_region" {
+#   description = "Region of the peer VPC"
+#   type        = string
+#   default     = "ap-northeast-2"  # 서울 리전
+# }
+
+# # Peer Owner ID
+# # 베이스 계정의 AWS Account ID (크로스 계정 Peering인 경우)
+# variable "peer_owner_id" {
+#   description = "AWS Account ID of the peer VPC owner (for cross-account peering)"
+#   type        = string
+#   default     = ""
+# }
+
+# # Peer VPC CIDR
+# # 베이스 계정 VPC의 CIDR 블록 (라우팅용)
+# variable "peer_vpc_cidr" {
+#   description = "CIDR block of the peer VPC (for routing)"
+#   type        = string
+#   default     = "10.71.0.0/16"
+# }
+
+# # Peering 자동 수락 여부
+# # 같은 계정 내 Peering인 경우 true, 크로스 계정인 경우 false (수동 수락 필요)
+# variable "peering_auto_accept" {
+#   description = "Whether to automatically accept the peering connection (same account only)"
+#   type        = bool
+#   default     = false
+# }
+
+# # Peering Connection 이름
+# variable "peering_connection_name" {
+#   description = "Name of the VPC Peering Connection"
 #   type        = string
 #   default     = ""
 # }
